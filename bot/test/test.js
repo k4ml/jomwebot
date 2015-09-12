@@ -10,7 +10,7 @@ var request = require('request'),
     Api = require('../lib/api_req.js');
 
 var jwj_group_id = process.env.JWJ_ID || "-14943090",
-    jwj_api_url = process.env.JWJ_API_URL || 'http://localhost:8000/jomweb';
+    jwj_api_url = process.env.JWJ_API_URL || 'http://localhost:8000';
 
 var _bot = require('vow-telegram-bot'),
     bot = new _bot({
@@ -29,7 +29,7 @@ var req = new Api(jwj_api_url, request, defer);
 describe('Command test', function () {
     it('should show username', function (done) {
         var q = defer();
-        var test_result;
+        var test_result = 'TEST';
         q.resolve({
             status: 200,
             name: 'kamal',
@@ -43,11 +43,29 @@ describe('Command test', function () {
             }
         });
         // much better if we can mock the http response instead
-        var mocked_req = sinon.stub(req, 'members').returns(q.promise);
+        // var mocked_req = sinon.stub(req, 'members').returns(q.promise);
+        nock(jwj_api_url).get('/jwj')
+                         .reply(200, {
+                            token: 'xxxx'
+                         })
+                        .get('/api/members/kamal')
+                        .reply(200, {
+                            status: 200,
+                            id: 1,
+                            name: 'kamal',
+                            skills: [
+
+                            ],
+                            social: {
+                                facebook: '',
+                                twitter: ''
+                            }
+                        });
 
         sinon.stub(bot, 'sendMessage', function(data) {
-            console.log(data);
+        console.log(test_result);
             test_result = data.text;
+        console.log(test_result);
         });
 
         var botcommands = new Botcommands(req, bot);
@@ -56,8 +74,9 @@ describe('Command test', function () {
                 id: 1
             }
         }
-        botcommands.siapa(bot_data, 'kamal');
+        botcommands.siapa(bot_data, ['/siapa', 'kamal']);
         done();
         assert.ok(test_result.search('kamal') > -1);
-    })
-})
+        return;
+    });
+});
